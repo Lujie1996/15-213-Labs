@@ -177,7 +177,14 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int bitCount(int x) {
-  return 2;
+  // https://stackoverflow.com/questions/3815165/how-to-implement-bitcount-using-only-bitwise-operators/
+  int c = 0;
+  c = (x & 0x55555555) + ((x >> 1) & 0x55555555);
+  c = (c & 0x33333333) + ((c >> 2) & 0x33333333);
+  c = (c & 0x0F0F0F0F) + ((c >> 4) & 0x0F0F0F0F);
+  c = (c & 0x00FF00FF) + ((c >> 8) & 0x00FF00FF);
+  c = (c & 0x0000FFFF) + ((c >> 16)& 0x0000FFFF);
+  return c;
 }
 /* 
  * bang - Compute !x without using !
@@ -187,7 +194,11 @@ int bitCount(int x) {
  *   Rating: 4 
  */
 int bang(int x) {
-  return 2;
+  int negX = ~x + 1;
+  x = x | negX; // if x==0, then (x|negX)'s MSB is 1, otherwise 0
+  x = x >> 31; // after this, x==0xFFFFFFFF if inputs is not 0
+  x = x + 1;
+  return x;
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -196,7 +207,7 @@ int bang(int x) {
  *   Rating: 1
  */
 int tmin(void) {
-  return 2;
+  return 0x80000000;
 }
 /* 
  * fitsBits - return 1 if x can be represented as an 
@@ -208,7 +219,10 @@ int tmin(void) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+  int bias = 32 + (~n + 1); // bias = 32 - n
+  int biased = (x << bias) >> bias; // shift left then shift right
+  int res = !(biased ^ x); // check if biased == x
+  return res;
 }
 /* 
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
@@ -219,7 +233,11 @@ int fitsBits(int x, int n) {
  *   Rating: 2
  */
 int divpwr2(int x, int n) {
-    return 2;
+  int tmp = 1 << n;
+  tmp = tmp + (~1 + 1);
+  int sign = x >> 31;
+  int bias = tmp & sign;
+  return (x + bias) >> n;
 }
 /* 
  * negate - return -x 
@@ -229,7 +247,7 @@ int divpwr2(int x, int n) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 /* 
  * isPositive - return 1 if x > 0, return 0 otherwise 
@@ -239,7 +257,7 @@ int negate(int x) {
  *   Rating: 3
  */
 int isPositive(int x) {
-  return 2;
+  return !((x >> 31) | (!x));
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -249,7 +267,12 @@ int isPositive(int x) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  int signx = (x >> 31) & 1;
+  int signy = (y >> 31) & 1;
+  int sign = (signx ^ signy) & signx; // x, y have different signs and x < 0
+  int tmp = x + ((~y) + 1); // x - y
+  tmp = ((tmp >> 31) & 1) & (!(signx ^ signy)); // x - y < 0 and have the same sign
+  return (sign | tmp | ((!(x ^ y)))); //
 }
 /*
  * ilog2 - return floor(log base 2 of x), where x > 0
