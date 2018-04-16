@@ -282,7 +282,13 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4
  */
 int ilog2(int x) {
-  return 2;
+  int count = (!!(x>>16))<<4; // !!: turn any possitive number to 1, and negative number to 0
+  count = count + ((!!(x>>(count + 8)))<<3);
+  count = count + ((!!(x>>(count + 4)))<<2);
+  count = count + ((!!(x>>(count + 2)))<<1);
+  count = count + (!!(x>>(count+ 1)));
+  // Note that shift operations have lower priority than +/-
+  return count;
 }
 /* 
  * float_neg - Return bit-level equivalent of expression -f for
